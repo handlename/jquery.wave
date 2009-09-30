@@ -1,5 +1,26 @@
-// TASK アニメーション
-// TASK 入れ子になった要素への対応	
+// This is a jquery plugin which waves text.
+//
+// !! caution !!
+// This script can load very heavy process to user if you set parameter "smooth"
+// on long text. So you shouldn't set effect on such situation.
+//
+// USAGE
+// $('wave-it').wave({speed:50,amplitude:4});
+//
+// PARAMETERS
+// There are six parameters.
+// speed
+//   Speed of wave. Smaller is faster. Default value is 50.
+// interval
+//   Time which text moving. Bigger is longer. Default value is 100.
+// amplitude
+//	 Amplitude of wave. Bigger is higher. Default value is 3. 
+// direction
+//   Direction of waves. You can set "vertical" or "horizontal".
+// type
+//   Type of waves. You can set "simple" or "smooth"(heavy). 
+// waveClass
+//   Class name for wave element. Default value is "waveElem".
 
 (function($){
 	$.fn.wave = function(params) {
@@ -11,16 +32,47 @@
 		var _type      = params.type ? params.type : 'simple';
 		var _waveClass = params.className ? params.className : 'waveElem';
 		
+		///// set animate parameter
+		var upParam;
+		var downParam;
 		switch(_direction) {
-			case 'horizontal' : moveto = 'left'; break;
-			case 'vertical' : default : moveto = 'top'; break;
+			case 'horizontal' :
+				moveto    = 'left';
+				upParam   = {left : '-' + _amplitude + 'px'};
+				downParam = {left : '0px'};
+				break;
+			case 'vertical' :
+			default :
+				moveto    = 'top';
+				upParam   = {top : '-' + _amplitude + 'px'};
+				downParam = {top : '0px'};
+				break;
 		}
 		
-		var action = function(params) {
-			$e.css(moveto, '-' + _amplitude + 'px');
+		///// set action
+		var upAction;
+		var downAction;
+		switch(_type) {
+			case 'smooth' :
+				upAction = function($e) {
+					$e.animate(upParam, _interval);
+				}
+				downAction = function($e) {
+					$e.animate(downParam, _interval);
+				}
+				break;
+			case 'simple' :
+			default :
+				upAction = function($e) {
+					$e.css(moveto, '-' + _amplitude + 'px');
+				}
+				downAction = function($e) {
+					$e.css(moveto, '0px');
+				}
+				break;
 		}
 		
-		///// 文字列を分解
+		///// decompose text
 		$(this).each(function() {
 			var text = $(this).html();
 			$(this).html(text.replace(
@@ -29,17 +81,15 @@
 			$(this).children('.' + _waveClass).css('position', 'relative');
 		}).css('position, relative');
 		
-		///// 波打たせる
+		///// wave
 		$(this).mouseover(function(){
 			$(this).children('.' + _waveClass).each(function(i) {
 				var $e = $(this);
-				setTimeout(function() {
-//					$e.css(moveto, '-' + _amplitude + 'px');
-					$e.animate({left:'-10px'}, _interval);
+				setTimeout(function(){
+					upAction($e)
 				}, _speed * i);
-				setTimeout(function() {
-//					$e.css(moveto, '0px');
-					$e.animate({left:'0px'}, _interval);
+				setTimeout(function(){
+					downAction($e)
 				}, _speed * i + _interval);
 			});
 		});
